@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubechart
+  namespace: kubechart
+  labels:
+    app: kubechart
+spec:
+  type: ClusterIP
+  selector:
+    app: kubechart
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  sessionAffinity: None
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubechart-lb
+  namespace: kubechart
+  labels:
+    app: kubechart
+spec:
+  type: LoadBalancer
+  selector:
+    app: kubechart
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  sessionAffinity: None

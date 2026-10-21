@@ -1,0 +1,41 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: platform-envoy
+  namespace: envoy-gateway-system
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass
+  description: "Envoy Gateway implementation for KubeChart"
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: platform-gateway
+  namespace: envoy-gateway-system
+  labels:
+    version: v1
+spec:
+  gatewayClassName: platform-envoy
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+      hostname: "*.example.com"
+
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: kubechart-tls
+            kind: Secret
+            namespace: kubechart
+      allowedRoutes:
+        namespaces:
+          from: All
+      hostname: "*.example.com"
