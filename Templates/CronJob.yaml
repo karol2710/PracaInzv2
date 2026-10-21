@@ -1,0 +1,28 @@
+apiVersion: v1 # Static
+kind: CronJob # Static
+metadata:
+  name: Name Of CronJob
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  concurrencyPolicy: Concurrency Policy
+  failedJobsHistoryLimit: Failed Jobs History Limit
+  schedule: Schedule
+  startingDeadlineSeconds: Starting Deadline Seconds
+  successfulJobsHistoryLimit: Successful Jobs History Limit
+  timeZone: Time Zone
+  jobTemplate: 
+    # same as Metadata and Spec of Job

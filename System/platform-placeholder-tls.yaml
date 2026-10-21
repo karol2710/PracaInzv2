@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: platform-placeholder-tls
+  namespace: envoy-gateway-system
+type: kubernetes.io/tls
+data:
+  tls.crt: ""
+  tls.key: ""

@@ -1,0 +1,84 @@
+apiVersion: v1 # Static
+kind: StatefulSet # Static
+metadata:
+  name: Name Of StatefulSet
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  minReadySeconds: Min Ready Seconds
+  ordinals:
+    start: Ordinals Start
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: When Deleted
+    whenScaled: When Scaled
+  podManagementPolicy: Pod Management Policy
+  replicas: Replicas
+  revisionHistoryLimit: Revision History Limit
+  selector:
+    matchExpressions:
+      - key: key
+        operator: operator
+        values:
+        - "value"
+        # ...
+      # ...
+    matchLabels:
+      key: value
+      # ...
+  serviceName: Service Name
+  updateStrategy:
+    type: Type
+    rollingUpdate:
+      maxUnavailable: Max Unavailable
+      partition: Partition
+  volumeClaimTemplates:
+    apiVersion: v1 #static
+    kind: PersistentVolumeClaim
+    metadata:
+      # same as above
+    spec:
+      accessModes: Access Modes
+      storageClassName: Storage Class Name
+      volumeAttributesClassName: Volume Attributes Class Name
+      volumeMode: Volume Mode
+      volumeName: Volume Name
+      selector:
+        matchExpressions:
+          - key: key
+            operator: operator
+            values:
+            - "value"
+            # ...
+          # ...
+        matchLabels:
+          key: value
+          # ...
+      dataSource:
+        name: Name
+        apiGroup: API Group
+        kind: Kind
+      dataSourceRef:
+        name: Name
+        namespace: Namespace
+        apiGroup: API Group
+        kind: Kind
+      resources:
+        limits:
+          storage: Limits
+        requests:
+          storage: Requests
+  template:
+    # same as Metadata and Spec of Pod

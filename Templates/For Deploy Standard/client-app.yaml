@@ -1,0 +1,20 @@
+# client-app.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: (Global Namespace) 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: (Global Namespace) ClusterIP
+  namespace: (Global Namespace) 
+spec:
+  selector:
+    app: (Global Namespace) App
+  ports:
+    - port: 80
+      targetPort: Container Port
+  type: ClusterIP
+
+# kubectl apply -f client-app.yaml

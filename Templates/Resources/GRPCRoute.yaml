@@ -1,0 +1,71 @@
+apiVersion: gateway.networking.k8s.io/v1 # Static
+kind: GRPCRoute # Static
+metadata:
+  name: Name Of GRPCRoute
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  parentRefs:
+    - name: platform-gateway # static
+      namespace: envoy-gateway-system # static
+  hostnames:
+    - "hostname"
+    # ...
+  rules:
+    - name: Section Name
+      matches:
+        - method: 
+            type: Type
+            service: Service
+            method: Method
+          headers:
+            - name: Header name
+              type: Header type
+              value: Header value
+      filters:
+        - type:
+          requestHeaderModifier:
+            set:
+              - name: Header name
+                value: Header value
+              # ...
+            add:
+              - name: Header name
+                value: Header value
+              # ...
+            remove:
+              - "Heared name"
+              # ...
+          responseHeaderModifier:
+            # same as in requestHeaderModifier
+          requestMirror:
+            percent: Traffic Mirror Percentage
+            fraction:
+              numerator: Numerator
+              denominator: Denominator
+            backendRef:
+              name: Service Name
+              namespace: Namespace
+              port: Port
+      backendRefs:
+        - name: Name
+          namespace: Namespace
+          group: Group
+          kind: Kind
+          port: Port
+          weight: Weight
+          filters:
+            # same as above

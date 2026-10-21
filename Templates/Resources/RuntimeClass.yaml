@@ -1,0 +1,31 @@
+apiVersion: node.k8s.io/v1 # Static
+kind: RuntimeClass # Static
+metadata:
+  name: Name Of RuntimeClass
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+handler: Handler
+overhead:
+  podFixed:
+    cpu: cpu
+    memory: memory
+scheduling:
+  tolerations:
+    - key: Key
+      effect: Effect
+      operator: Operator
+      tolerationSeconds: Toleration Seconds
+      value: Value

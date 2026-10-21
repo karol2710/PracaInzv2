@@ -1,0 +1,23 @@
+apiVersion: storage.k8s.io/v1 # Static
+kind: VolumeAttributesClass # Static
+metadata:
+  name: Name Of VolumeAttributesClass
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+driverName: Driver Name
+parameters:
+  key: value
+  # ...

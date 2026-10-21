@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: (Global Namespace)-quota
+  namespace: (Global Namespace)
+spec:
+  hard:
+    requests.cpu: "Requests CPU"
+    requests.memory: "Requests Memory"
+    limits.cpu: "Limits CPU"
+    limits.memory: "Limits Memory"
+    persistentvolumeclaims: "Persistent Volume Claims Limit"
+    requests.storage: "Requests Storage"
+
+# kubectl apply -f client-limits-quota.yaml

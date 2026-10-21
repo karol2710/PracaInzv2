@@ -1,0 +1,18 @@
+# client-certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: (Global Namespace)-cert-prod
+  namespace: (Global Namespace) 
+spec:
+  secretName: (Global Namespace)-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: (Client Domain)
+  dnsNames:
+    - (Client Domain)
+
+
+# kubectl apply -f client-certificate.yaml
+# kubectl -n (Global Namespace) get certificate (Global Namespace)-cert -o yaml

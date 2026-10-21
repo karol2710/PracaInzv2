@@ -1,0 +1,26 @@
+# client-networkpolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: isolate-(Global Namespace)
+  namespace: (Global Namespace)
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {}   # ruch wewnątrz namespace
+        - namespaceSelector:
+            matchLabels:
+              name: envoy-gateway-system    # lub kube-system jeśli gateway tam działa
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.42.0.0/16   # POD_CIDR -> zmień jeśli inne
+              - 10.43.0.0/16   # SERVICE_CIDR -> zmień jeśli inne
+
+# kubectl apply -f client-networkpolicy.yaml

@@ -1,0 +1,437 @@
+apiVersion: v1 # Static
+kind: Pod # Static
+metadata:
+  name: Name Of Pod
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  # Life Cycle
+  activeDeadlineSeconds: Pod Death Time (seconds)
+  terminationGracePeriodSeconds: Termination Grace Period (seconds)
+  restartPolicy: Restart Policy
+  # Scheduling
+  nodeName: Node Name
+  priority: Priority
+  priorityClassName: Priority Class Name
+  # Security
+  serviceAccountName: Service Account Name
+  automountServiceAccountToken: bool # true or false
+  #Networking
+  hostname: Host Name
+  subdomain: Subdomain
+  dnsPolicy: DNS Policy
+  enableServiceLinks: bool # true or false
+  hostIPC: bool # true or false
+  hostNetwork: bool # true or false
+  hostPID: bool # true or false
+  hostUsers: bool # true or false
+  shareProcessNamespace: bool # true or false
+  # DNS Config
+  dnsConfig:
+    nameservers:
+      - a.b.c.d
+      # ...
+    searches:
+      - search
+      # ...
+    options:
+      - name: name
+        value: "value"
+      - name: name2
+        value: "value2"
+      # ...
+  # Host Aliases
+  hostAliases:
+    - ip: "IP Address"
+      hostnames:
+      - "Hostname"
+      # ...
+    # ...
+  #Tolerations
+  tolerations:
+    - key: Key
+      effect: Effect
+      operator: Operator
+      tolerationSeconds: Toleration Seconds
+      value: Value
+  # Topology Spread Constrains
+  topologySpreadConstraints:
+    - topologyKey: Topology Key
+      maxSkew: Max Skew
+      minDomains: Min Domains
+      nodeAffinityPolicy: Node Affinity Policy
+      nodeTaintsPolicy: Node Taints Policy
+      whenUnsatisfiable: When Unsatisfiable
+      labelSelector: 
+        matchExpressions:
+          - key: key
+            operator: operator
+            values:
+            - "value"
+            # ...
+          # ...
+        matchLabels:
+          key: value
+          # ...
+  # Pod Affinity
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: Weight
+          preference:
+            matchExpressions:
+              - key: Key
+                operator: Operator
+                values:
+                - "values"
+                # ...
+              # ...
+            matchFields:
+              - key: Key
+                operator: Operator
+                values:
+                - "values"
+                # ...
+              # ...
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          matchExpressions:
+            - key: Key
+              operator: Operator
+              values:
+              - "values"
+              # ...
+            # ...
+          matchFields:
+            - key: Key
+              operator: Operator
+              values:
+              - "values"
+              # ...
+            # ...
+    podAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: Weight
+          podAffinityTerm:
+            namespaces:
+              - "namespace"
+            topologyKey: Topology Key
+            labelSelector:
+              matchExpressions:
+                - key: Key
+                  operator: Operator
+                  values:
+                  - "values"
+                  # ...
+                # ...
+              matchLabels:
+                key: value
+            matchLabelKeys:
+              "value"
+            mismatchLabelKeys:
+              "value"
+            namespaceSelector:  
+              matchExpressions:
+                - key: Key
+                  operator: Operator
+                  values:
+                  - "values"
+                  # ...
+                # ...
+              matchLabels:
+                key: value
+      requiredDuringSchedulingIgnoredDuringExecution:
+        namespaces:
+          - "namespace"
+        topologyKey: Topology Key
+        labelSelector:
+          matchExpressions:
+            - key: Key
+              operator: Operator
+              values:
+              - "values"
+              # ...
+            # ...
+          matchLabels:
+            key: value
+        matchLabelKeys:
+          "value"
+        mismatchLabelKeys:
+          "value"
+        namespaceSelector:  
+          matchExpressions:
+            - key: Key
+              operator: Operator
+              values:
+              - "values"
+              # ...
+            # ...
+          matchLabels:
+            key: value
+    podAntiAffinity:
+      # same as pod affinity
+  #Advances
+  imagePullSecrets:
+    key: value
+  runtimeClassName: Runtime Class Name
+  #Containers
+  containers:
+    - name: Name
+      image: Image
+      imagePullPolicy: Image Pull Policy
+      args:
+      - "argument"
+      command:
+      - "command"
+      stdin: bool # true or false
+      stdinOnce: bool # true or false
+      tty: bool # true or false
+      lifecycle:
+        postStart:
+          exec:
+            command:
+            - "command"
+            # ...
+          httpGet:
+            host: Host
+            path: Path
+            port: Port 
+            scheme: Scheme
+            httpHeaders:
+              - name: Header Name
+                value: Header Value
+          sleep:
+            seconds: Sleep Duration (seconds)
+        preStop:
+          # same as postStart
+      terminationMessagePath: Termination Message Path
+      terminationMessagePolicy: Termination Message Policy
+      env:
+        - name: Variable Name
+          value: value
+          valueFrom: 
+            configMapKeyRef:
+              key: Key
+              name: Name
+            fieldRef:
+              apiVersion: API Version
+              fieldPath: Field Path
+            resourceFieldRef:
+              containerName: Container Name
+              resource: Resource
+              divisor: Divisor
+            secretKeyRef:
+              key: Key
+              name: Name
+      envFrom:
+        - prefix: Prefix
+          configMapRef:
+            name: ConfigMap Reference
+          secretRef:
+            name: Secret Reference
+      ports:
+        - Name: Name
+          hostIP: Host IP
+          hostPort: Host Port
+          containerPort: Container Port
+          protocol: Protocol
+      startupProbe:
+        # same as livenessProbe
+      livenessProbe:
+        failureThreshold: Failure Threshold
+        initialDelaySeconds: Initial Delay (seconds)
+        periodSeconds: Period (seconds)
+        successThreshold: Success Threshold
+        terminationGracePeriodSeconds: Termination Grace Period (seconds)
+        timeoutSeconds: Timeout (seconds)
+        exec:
+          command:
+          - "command"
+          # ...
+        grpc:
+          port: Port
+          service: Service
+        httpGet:
+          path: Path
+          port: Port
+          scheme: Scheme
+          httpHeaders:
+            - name: Header Name
+              value: Header Value
+            # ...
+        tcpSocket:
+          host: Host
+          port: Port
+      readinessProbe:
+        # same as livenessProbe
+      volumeMounts:
+        - name: Name
+          mountPath: Mount Path
+          subPath: SubPath
+          subPathExpr: SubPath Expr
+          mountPropagation: Mount Propagation
+          readOnly: bool # true or false
+          recursiveReadOnly: bool # true or false
+      volumeDevices:
+        - name: Name
+          devicePath: Device Path
+        # ...
+      resources:
+        limits:
+          memory: Memory
+          cpu: CPU
+          ephemeral-storage: Ephemeral Storage
+          storage: Storage
+        requests:
+          memory: Memory
+          cpu: CPU
+          ephemeral-storage: Ephemeral Storage
+          storage: Storage
+      workingDir: Working Directory
+      resizePolicy:
+        - resourceName: Resource Name
+          restartPolicy: Policy Type
+      restartPolicy: Restart Policy
+      restartPolicyRules:
+        - action: Restart
+          exitCodes:
+            operator: Operator
+            values:
+            - "value"
+            # ...
+        # ...
+      securityContext:
+        procMount: Process Mount
+        runAsGroup: Run as Group
+        runAsNonRoot: bool # true or false
+        runAsUser: Run as User
+        allowPrivilegeEscalation: bool # true or false
+        seLinuxOptions:
+          level: Level
+          role: Role 
+          type: Type
+          user: User
+        appArmorProfile:
+          localhostProfile: LocalHost Profile
+          type: Type
+        capabilities:
+          add:
+          - "capability"
+          # ...
+          drop:
+          - "capability"
+          # ...
+        seccompProfile:
+          localhostProfile: LocalHost Profile
+          type: Type
+  ephemeralContainers:
+    # same as container
+  initContainers:
+    # same as container
+  # Volumes
+  volumes:
+    - name: Volume Name
+      configMap:
+        name: ConfigMap Name
+        defaultMode: Default Mode
+        items:
+          - key: key
+            path: path
+            mode: mode
+          # ...
+    - name: Volume Name
+      emptyDir:
+        medium: Medium
+        sizeLimit: Size Limit
+    - name: Volume Name
+      ephemeral:
+        volumeClaimTemplate:
+          metadata:
+            # same as above
+          spec:
+            volumeMode: Volume Mode
+            volumeName: Volume Name
+            storageClassName: Storage Class Name
+            volumeAttributesClassName: Volume Attributes Class Name
+            accessModes:
+            - "Access Mode"
+            # ...
+            dataSource:
+              name: Name
+              apiGroup: API Group
+              kind: Kind
+            dataSourceRef:
+              name: Name
+              namespace: Namespace
+              apiGroup: API Group
+              kind: Kind
+            resources:
+              limits:
+                storage: value
+              requests:
+                storage: value
+            selector:
+              matchExpressions:
+                - key: key
+                  operator: operator
+                  values:
+                  - "value"
+                  # ...
+                # ...
+              matchLabels:
+                key: value
+                # ...
+    - name: Volume Name
+      hostPath:
+        path: Path
+        type: Type
+    - name: Volume Name
+      persistentVolumeClaim:
+        claimName: Claim Name
+        readOnly: true # true or false
+    - name: Volume Name
+      secret:
+        defaultMode: Default Mode
+        secretName: Secret Name
+        items:
+          - key: key
+            mode: mode
+            path: path
+  # Security Context
+  securityContext:
+    procMount: Process Mount
+    runAsGroup: Run as Group
+    runAsNonRoot: bool # true or false
+    runAsUser: Run as User
+    allowPrivilegeEscalation: bool # true or false
+    seLinuxOptions:
+      level: Level
+      role: Role 
+      type: Type
+      user: User
+    appArmorProfile:
+      localhostProfile: LocalHost Profile
+      type: Type
+    capabilities:
+      add:
+      - "capability"
+      # ...
+      drop:
+      - "capability"
+      # ...
+    seccompProfile:
+      localhostProfile: LocalHost Profile
+      type: Type

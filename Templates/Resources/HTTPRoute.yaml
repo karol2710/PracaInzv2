@@ -1,0 +1,92 @@
+apiVersion: gateway.networking.k8s.io/v1 # Static
+kind: HTTPRoute # Static
+metadata:
+  name: Name Of HTTPRoute
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  parentRefs:
+    - name: platform-gateway # static
+      namespace: envoy-gateway-system # static
+  hostnames:
+    - "hostname"
+    # ...
+  rules:
+    - name: Section Name
+      timeouts:
+        request: Request Duration
+        backendRequest: Backend Request Duration
+      matches:
+        - method: Method
+          path: 
+            type: Path Type
+            value: Path Value
+          headers:
+            - name: Header name
+              value: Header value
+            # ...
+          queryParams:
+            - name: Param name
+              value: Param value
+            # ...
+      filters:
+        - type:
+          requestHeaderModifier:
+            set:
+              - name: Header name
+                value: Header value
+              # ...
+            add:
+              - name: Header name
+                value: Header value
+              # ...
+            remove:
+              - "Heared name"
+              # ...
+          responseHeaderModifier:
+            # same as in requestHeaderModifier
+          requestMirror:
+            percent: Percent 
+            fraction:
+              numerator: Numerator
+              denominator: Denominator
+            backendRef:
+              name: Service Name
+              namespace: Namespace
+              port: Port
+          requestRedirect:
+            scheme: Scheme
+            hostname: Hostname
+            path:
+              type: Path Type
+              value: Path Value
+            port: Port
+            statusCode: Status Code
+          urlRewrite:
+            hostname: Hostname
+            path:
+              type: Path Type
+              value: Path Value
+        # ...
+      backendRefs:
+        - name: Name
+          weight: Weight
+          group: Group
+          kind: Kind
+          namespace: Namespace
+          port: Port
+          filters:
+            # same as in filters above

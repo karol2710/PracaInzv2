@@ -1,0 +1,60 @@
+apiVersion: v1 # Static
+kind: Job # Static
+metadata:
+  name: Name Of Job
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  activeDeadlineSeconds: Active Deadline Seconds
+  backoffLimit: Backoff Limit
+  backoffLimitPerIndex: Backoff Limit Per Index
+  completionMode: Completion Mode
+  completions: Completions
+  manualSelector: bool # true or false
+  maxFailedIndexes: Max Failed Indexes
+  parallelism: Parallelism
+  podFailurePolicy:
+    rules:
+      - action: Action
+        onExitCodes:
+          containerName: Container Name
+          operator: Operator
+          values:
+          - "value"
+          # ...
+        onPodConditions:
+          - status: Status
+            type: Type
+          # ...
+  podReplacementPolicy: Pod Replacement Policy
+  selector:
+    matchExpressions:
+      - key: key
+        operator: operator
+        values:
+        - "value"
+        # ...
+      # ...
+    matchLabels:
+      key: value
+      # ...
+  successPolicy:
+    rules:
+      succeededCount: Succeeded Count
+      succeededIndexes: Succeeded Indexes
+  ttlSecondsAfterFinished: TTL Seconds After Finished
+  template:
+    # same as Metadata and Spec of Pod

@@ -1,0 +1,37 @@
+apiVersion: v1 # Static
+kind: Service # Static
+metadata:
+  name: Name Of Service
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  type: Type
+  publishNotReadyAddresses: bool # true or false
+  trafficDistribution: Traffic Distribution
+  externalName: External Name
+  ports:
+    - name: Name
+      protocol: Protocol
+      appProtocol: App Protocol
+      port: Port
+      targetPort: Target Port
+  selector:
+    key: value
+    # ...
+  sessionAffinity: Session Affinity
+  sessionAffinityConfig:
+    clientIP: 
+      timeoutSeconds: Session Affinity Timeout (seconds)

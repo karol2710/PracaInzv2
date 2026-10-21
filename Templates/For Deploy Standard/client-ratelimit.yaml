@@ -1,0 +1,33 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: (Global Namespace)-ratelimit
+  namespace: (Global Namespace)
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: (Global Namespace)-route # or name of HTTPRoute created by client
+  rateLimit:
+    local:  # możesz użyć "global" jeśli masz globalny rate limit serwer
+      rules:
+          limit:
+            requests: Requests per Second
+            unit: Second
+  timeout:
+    http:
+      requestTimeout: 5s # max lifetime requestu
+      connectionIdleTimeout: 30s # max idle (keep-alive)
+  retry:
+    numRetries: 2
+    retryOn:
+      triggers:
+        - 5xx
+        - gateway-error
+        - connect-failure
+    perRetry:
+      backoff:
+        baseInterval: 100ms
+        maxInterval: 1s
+
+# kubectl apply -f client-ratelimit.yaml

@@ -1,0 +1,42 @@
+apiVersion: v1 # Static
+kind: LimitRange # Static
+metadata:
+  name: Name Of LimitRange
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  limits:
+    - type:
+      default:
+        cpu: cpu
+        memory: memory
+        storage: storage
+      defaultRequest:
+        cpu: cpu
+        memory: memory
+        storage: storage
+      max:
+        cpu: cpu
+        memory: memory
+        storage: storage
+      min:
+        cpu: cpu
+        memory: memory
+        storage: storage
+      maxLimitRequestRatio:
+        cpu: cpu
+        memory: memory
+        storage: storage

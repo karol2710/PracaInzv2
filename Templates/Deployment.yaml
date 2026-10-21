@@ -1,0 +1,42 @@
+apiVersion: v1 # Static
+kind: Deployment # Static
+metadata:
+  name: Name Of Deployment
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  minReadySeconds: Min Ready Seconds
+  progressDeadlineSeconds: Progress Deadline (seconds)
+  replicas: Replicas
+  revisionHistoryLimit: Revision History Limit
+  selector:
+    matchExpressions:
+      - key: key
+        operator: operator
+        values:
+        - "value"
+        # ...
+      # ...
+    matchLabels:
+      key: value
+      # ...
+  strategy:
+    type: Type
+    rollingUpdate:
+      maxSurge: Max Surge
+      maxUnavailable: Max Unavailable
+  template:
+    # same as Metadata and Spec of Pod

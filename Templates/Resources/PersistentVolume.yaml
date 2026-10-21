@@ -1,0 +1,35 @@
+apiVersion: v1 # Static
+kind: PersistentVolume # Static
+metadata:
+  name: Name Of PersistentVolume
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  accessModes:
+    - "Access Mode"
+  capacity:
+    storage: Capacity
+  claimRef:
+    name: Name
+    namespace: Namespace
+    resourceVersion: Resource Version
+    kind: Kind
+    fieldPath: Field Path
+    apiVersion: API Version
+  persistentVolumeReclaimPolicy: PV Reclaim Policy
+  storageClassName: Storage Class Name
+  volumeAttributesClassName: Volume Attributes Class Name
+  volumeMode: Volume Mode

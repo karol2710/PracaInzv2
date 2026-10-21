@@ -1,0 +1,51 @@
+apiVersion: v1 # Static
+kind: PersistentVolumeClaim # Static
+metadata:
+  name: Name Of PersistentVolumeClaim
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  accessModes:
+    - "Access Mode"
+  dataSource:
+    name: Name
+    kind: Kind
+    apiGroup: API Group
+  dataSourceRef:
+    name: Name
+    namespace: Namespace
+    kind: Kind
+    apiGroup: API Group
+  resources:
+    limits:
+      storage: storage
+    requests:
+      storage: storage
+  selector:
+    matchExpressions:
+      - key: key
+        operator: operator
+        values:
+        - "value"
+        # ...
+      # ...
+    matchLabels:
+      key: value
+      # ...
+  storageClassName: Storage Class Name
+  volumeAttributesClassName: Volume Attributes Class Name
+  volumeMode: Volume Mode
+  volumeName: Volume Name

@@ -1,0 +1,35 @@
+apiVersion: v1 # Static
+kind: ReplicaSet # Static
+metadata:
+  name: Name Of ReplicaSet
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+spec:
+  minReadySeconds: Min Ready Seconds
+  replicas: Replicas
+  selector:
+    matchExpressions:
+      - key: key
+        operator: operator
+        values:
+        - "value"
+        # ...
+      # ...
+    matchLabels:
+      key: value
+      # ...
+  template:
+    # same as Metadata and Spec of Pod

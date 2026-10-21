@@ -1,0 +1,30 @@
+apiVersion: v1 # Static
+kind: ConfigMap # Static
+metadata:
+  name: Name Of ConfigMap
+  namespace: Namespace
+  deletionGracePeriodSeconds: x #number of seconds
+  annotations:
+    key: "value"
+    # ...
+  labels:
+    key: "value"
+    # ...
+  ownerReference:
+    apiVersion: API version
+    kind: Kind
+    name: Name
+    uid: UID
+    blockOwnerDeletion: bool # true or false
+    controller: bool # true or false
+binaryData:
+  key: value
+  # ...
+data:
+  key: value
+  key: |
+    key=value
+    key=value
+    # ...
+  # ...
+immutable: bool # true or false
