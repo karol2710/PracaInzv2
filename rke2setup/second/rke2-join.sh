@@ -45,8 +45,8 @@ echo "  Node Name: $NODE_NAME"
 echo "  Server IP: $SERVER_IP"
 echo
 
-read -r -p "Czy kontynuować? [t/N]: " CONFIRM
-if [[ ! "$CONFIRM" =~ ^[tT]$ ]]; then
+read -r -p "Czy kontynuować? [Y/N]: " CONFIRM
+if [[ ! "$CONFIRM" =~ ^[yY]$ ]]; then
     echo "Anulowano."
     exit 0
 fi
