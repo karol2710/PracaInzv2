@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: admin-api-Deployment
+  name: admin-api-deployment
   namespace: admin-api
 spec:
   replicas: 1
@@ -18,7 +18,7 @@ spec:
         - name: dockerhub-secret
       containers:
         - name: admin-api
-          image: yoghlol/prcainz:0.1
+          image: yoghlol/pracainz:0.1
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
