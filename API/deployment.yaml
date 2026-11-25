@@ -14,10 +14,12 @@ spec:
         app: admin-api
     spec:
       serviceAccountName: admin-api-sa
+      imagePullSecrets:
+        - name: dockerhub-secret
       containers:
         - name: admin-api
           image: yoghlol/prcainz:0.1
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
               name: http
