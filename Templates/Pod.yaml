@@ -412,26 +412,25 @@ spec:
             path: path
   # Security Context
   securityContext:
-    procMount: Process Mount
     runAsGroup: Run as Group
     runAsNonRoot: bool # true or false
     runAsUser: Run as User
-    allowPrivilegeEscalation: bool # true or false
+    fsGroup: fsGroup
+    fsGroupChangePolicy: Always or OnRootMismatch
+    seLinuxChangePolicy: MountOption or Recursive
     seLinuxOptions:
       level: Level
       role: Role 
       type: Type
       user: User
+    supplementalGroups: int array
+    supplementalGroupsPolicy: Merge or Strict
     appArmorProfile:
       localhostProfile: LocalHost Profile
       type: Type
-    capabilities:
-      add:
-      - "capability"
-      # ...
-      drop:
-      - "capability"
-      # ...
     seccompProfile:
       localhostProfile: LocalHost Profile
       type: Type
+    Sysctl:
+      name: value
+      #...
