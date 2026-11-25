@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: admin-API-Deployment
-  namespace: admin-API
+  name: admin-api-Deployment
+  namespace: admin-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: admin-API
+      app: admin-api
   template:
     metadata:
       labels:
-        app: admin-API
+        app: admin-api
     spec:
-      serviceAccountName: admin-API-SA
+      serviceAccountName: admin-api-sa
       containers:
-        - name: admin-API
+        - name: admin-api
           image: yoghlol/prcainz:0.1
           imagePullPolicy: IfNotPresent
           ports:

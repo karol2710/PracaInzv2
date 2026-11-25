@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: admin-API-CR
+  name: admin-api-cr
 rules:
   - apiGroups: [""]
     resources:
@@ -14,12 +14,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: admin-API-CRB
+  name: admin-api-crb
 subjects:
   - kind: ServiceAccount
-    name: admin-API-SA
-    namespace: admin-API
+    name: admin-api-sa
+    namespace: admin-api
 roleRef:
   kind: ClusterRole
-  name: admin-API-CR
+  name: admin-api-cr
   apiGroup: rbac.authorization.k8s.io
