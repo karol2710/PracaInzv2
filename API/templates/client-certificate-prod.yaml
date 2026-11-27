@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .RouteName }}-prod
+  namespace: {{ .Namespace }}
+spec:
+  secretName: {{ .RouteName }}-prod-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io
+  dnsNames:
+    - "{{ .Domain }}"

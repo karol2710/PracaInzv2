@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: platform-quota
+  namespace: {{ .Namespace }}
+spec:
+  hard:
+    requests.cpu: "{{ .CPU }}"
+    limits.cpu: "{{ .CPU }}"
+    requests.memory: "{{ .Memory }}"
+    limits.memory: "{{ .Memory }}"
+    persistentvolumeclaims: "{{ .PVLimit }}"
+    requests.storage: "{{ .Storage }}"
