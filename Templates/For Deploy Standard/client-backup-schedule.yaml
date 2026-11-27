@@ -10,4 +10,5 @@ spec:
     includedNamespaces:
       - (Global Namespace)
     snapshotVolumes: true
+    snapshotMoveData: true
     includeClusterResources: false

@@ -1,0 +1,145 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: platform-helm-binding
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - rbac.authorization.k8s.io
+      apiVersions:
+      - '*'
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - rolebindings
+  validations:
+  - expression: namespaceObject != null && has(namespaceObject.metadata.labels) &&
+      'platform-client' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['platform-client']
+      == 'true' && object.metadata.name == 'platform-helm-deployer' && object.roleRef.apiGroup
+      == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name
+      == 'platform-helm-deployer' && has(object.subjects) && size(object.subjects)
+      == 1 && object.subjects.all(s, s.kind == 'ServiceAccount' && s.name == 'platform-helm-deployer'
+      && has(s.namespace) && s.namespace == request.namespace)
+    message: 'Platform Helm identity restriction: platform-helm-binding'
+  matchConditions:
+  - name: admin-api
+    expression: request.userInfo.username == 'system:serviceaccount:admin-api:admin-api-sa'
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: platform-helm-binding
+spec:
+  policyName: platform-helm-binding
+  validationActions:
+  - Deny
+  - Audit
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: platform-helm-token
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - '*'
+      operations:
+      - CREATE
+      resources:
+      - serviceaccounts/token
+  validations:
+  - expression: namespaceObject != null && has(namespaceObject.metadata.labels) &&
+      'platform-client' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['platform-client']
+      == 'true' && request.name == 'platform-helm-deployer' && has(object.spec.expirationSeconds)
+      && object.spec.expirationSeconds <= 600
+    message: 'Platform Helm identity restriction: platform-helm-token'
+  matchConditions:
+  - name: admin-api
+    expression: request.userInfo.username == 'system:serviceaccount:admin-api:admin-api-sa'
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: platform-helm-token
+spec:
+  policyName: platform-helm-token
+  validationActions:
+  - Deny
+  - Audit
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: platform-helm-no-deployer-pods
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - '*'
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+    namespaceSelector:
+      matchLabels:
+        platform-client: 'true'
+  validations:
+  - expression: (!has(object.spec.serviceAccountName) || object.spec.serviceAccountName
+      != 'platform-helm-deployer') && (!has(object.spec.serviceAccount) || object.spec.serviceAccount
+      != 'platform-helm-deployer')
+    message: 'Platform Helm identity restriction: platform-helm-no-deployer-pods'
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: platform-helm-no-deployer-pods
+spec:
+  policyName: platform-helm-no-deployer-pods
+  validationActions:
+  - Deny
+  - Audit
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: platform-helm-no-token-secrets
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - '*'
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - secrets
+    namespaceSelector:
+      matchLabels:
+        platform-client: 'true'
+  validations:
+  - expression: '!has(object.type) || object.type != ''kubernetes.io/service-account-token'''
+    message: 'Platform Helm identity restriction: platform-helm-no-token-secrets'
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: platform-helm-no-token-secrets
+spec:
+  policyName: platform-helm-no-token-secrets
+  validationActions:
+  - Deny
+  - Audit

@@ -2,25 +2,62 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: isolate-(Global Namespace)
-  namespace: (Global Namespace)
+  name: isolate-{{ .Namespace }}
+  namespace: {{ .Namespace }}
+
 spec:
   podSelector: {}
+
   policyTypes:
     - Ingress
     - Egress
+
   ingress:
+
+    # Komunikacja wewnątrz namespace klienta
     - from:
-        - podSelector: {}   # ruch wewnątrz namespace
+        - podSelector: {}
+
+    # Dostęp wyłącznie z Envoy Proxy
+    - from:
         - namespaceSelector:
             matchLabels:
-              name: envoy-gateway-system    # lub kube-system jeśli gateway tam działa
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: envoy
+              gateway.envoyproxy.io/owning-gateway-name: platform-gateway
+              gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+
   egress:
+
+    # Komunikacja wewnętrzna klienta
+    - to:
+        - podSelector: {}
+
+    # Dostęp do CoreDNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Dostęp do publicznego Internetu
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0
             except:
-              - 10.42.0.0/16   # POD_CIDR -> zmień jeśli inne
-              - 10.43.0.0/16   # SERVICE_CIDR -> zmień jeśli inne
-
-# kubectl apply -f client-networkpolicy.yaml
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16
+              - 100.64.0.0/10
+              - 127.0.0.0/8

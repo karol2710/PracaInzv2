@@ -1,0 +1,128 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: admin-api-provisioner
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - namespaces
+  verbs:
+  - create
+- apiGroups:
+  - ''
+  resources:
+  - resourcequotas
+  - services
+  - serviceaccounts
+  verbs:
+  - create
+  - get
+- apiGroups:
+  - ''
+  resources:
+  - serviceaccounts
+  verbs:
+  - update
+  resourceNames:
+  - default
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
+  verbs:
+  - create
+  - get
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  verbs:
+  - create
+  - get
+- apiGroups:
+  - gateway.networking.k8s.io
+  resources:
+  - httproutes
+  - referencegrants
+  verbs:
+  - create
+  - get
+- apiGroups:
+  - gateway.envoyproxy.io
+  resources:
+  - backendtrafficpolicies
+  verbs:
+  - create
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-api-provisioner
+subjects:
+- kind: ServiceAccount
+  name: admin-api-sa
+  namespace: admin-api
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin-api-provisioner
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: admin-api-gateway
+  namespace: envoy-gateway-system
+rules:
+- apiGroups:
+  - gateway.networking.k8s.io
+  resources:
+  - gateways
+  verbs:
+  - get
+  - update
+  resourceNames:
+  - platform-gateway
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: admin-api-gateway
+  namespace: envoy-gateway-system
+subjects:
+- kind: ServiceAccount
+  name: admin-api-sa
+  namespace: admin-api
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: admin-api-gateway
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: admin-api-backup
+  namespace: velero
+rules:
+- apiGroups:
+  - velero.io
+  resources:
+  - schedules
+  verbs:
+  - create
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: admin-api-backup
+  namespace: velero
+subjects:
+- kind: ServiceAccount
+  name: admin-api-sa
+  namespace: admin-api
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: admin-api-backup

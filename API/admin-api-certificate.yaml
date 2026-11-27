@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: admin-api-certificate
+  namespace: envoy-gateway-system
+spec:
+  secretName: admin-api-tls
+  issuerRef:
+    name: local-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  commonName: api.twoja-domena.local
+  dnsNames:
+    - api.twoja-domena.local
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - server auth
+    - digital signature
+    - key encipherment
+  duration: 2160h
+  renewBefore: 360h

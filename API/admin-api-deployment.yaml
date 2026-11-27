@@ -18,11 +18,32 @@ spec:
         - name: dockerhub-secret
       containers:
         - name: admin-api
-          image: yoghlol/pracainz:0.1
+          image: yoghlol/pracainz:0.5
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
               name: http
+          env:
+            - name: CLIENT_PROVISIONING_ENABLED
+              value: "false"
+            - name: HELM_DEPLOYMENT_ENABLED
+              value: "false"
+            - name: HELM_ALLOWED_HOSTS
+              value: ""
+            - name: POSTGRES_HOST
+              value: admin-postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: CLIENTS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: admin-postgres-secret
+                  key: CLIENTS_DB_PASSWORD
+            - name: CLUSTER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: admin-postgres-secret
+                  key: CLUSTER_DB_PASSWORD
           readinessProbe:
             httpGet:
               path: /api/v1/health
@@ -31,17 +52,17 @@ spec:
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /api/v1/health
+              path: /api/v1/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 20
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 500m
+              cpu: 250m
               memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

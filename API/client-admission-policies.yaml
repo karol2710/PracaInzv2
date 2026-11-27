@@ -1,0 +1,141 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: platform-client-service
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - '*'
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - services
+    namespaceSelector:
+      matchLabels:
+        platform-client: 'true'
+  validations:
+  - expression: (!has(object.spec.type) || object.spec.type == 'ClusterIP') && (!has(object.spec.externalIPs)
+      || size(object.spec.externalIPs) == 0) && (!has(object.spec.ports) || object.spec.ports.all(p,
+      !has(p.nodePort) || p.nodePort == 0))
+    message: Client services must be ClusterIP without external IPs or node ports.
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: platform-client-service
+spec:
+  policyName: platform-client-service
+  validationActions:
+  - Audit
+  - Warn
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: platform-client-pvc
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - '*'
+      operations:
+      - CREATE
+      resources:
+      - persistentvolumeclaims
+    namespaceSelector:
+      matchLabels:
+        platform-client: 'true'
+  validations:
+  - expression: has(object.spec.storageClassName) && object.spec.storageClassName
+      == 'platform-storageclass' && !has(object.spec.selector) && !has(object.spec.dataSource)
+      && !has(object.spec.dataSourceRef) && (!has(object.spec.volumeName) || object.spec.volumeName
+      == '')
+    message: Client PVC must use platform-storageclass without prebinding or data
+      sources.
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: platform-client-pvc
+spec:
+  policyName: platform-client-pvc
+  validationActions:
+  - Audit
+  - Warn
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: platform-client-secret
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - '*'
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - secrets
+    namespaceSelector:
+      matchLabels:
+        platform-client: 'true'
+  validations:
+  - expression: '!has(object.type) || object.type != ''kubernetes.io/service-account-token'''
+    message: Legacy service account token secrets are forbidden.
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: platform-client-secret
+spec:
+  policyName: platform-client-secret
+  validationActions:
+  - Audit
+  - Warn
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: platform-client-namespace-labels
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - '*'
+      operations:
+      - UPDATE
+      resources:
+      - namespaces
+  validations:
+  - expression: '!has(oldObject.metadata.labels) || !(''platform-client'' in oldObject.metadata.labels)
+      || oldObject.metadata.labels[''platform-client''] != ''true'' || (has(object.metadata.labels)
+      && ''platform-client'' in object.metadata.labels && object.metadata.labels[''platform-client'']
+      == ''true'' && [''enforce'',''audit'',''warn''].all(k, (''pod-security.kubernetes.io/''
+      + k) in object.metadata.labels && object.metadata.labels[''pod-security.kubernetes.io/''
+      + k] == ''restricted''))'
+    message: Client namespace isolation labels must be retained.
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: platform-client-namespace-labels
+spec:
+  policyName: platform-client-namespace-labels
+  validationActions:
+  - Audit
+  - Warn

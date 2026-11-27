@@ -1,161 +1,240 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # ==========================================
 # Konfiguracja
 # ==========================================
-MINIO_NAMESPACE="minio"
-MINIO_RELEASE="minio"
-MINIO_MODE="standalone"
-MINIO_REPLICAS="1"
-MINIO_ROOT_USER="admin"
-MINIO_ROOT_PASSWORD="admin1234"
-MINIO_BUCKET="velero"
-STORAGE_CLASS="platform-storageclass"   # Twój StorageClass Longhorn
-VELERO_NAMESPACE="velero"
-VELERO_BUCKET="$MINIO_BUCKET"
-VELERO_REGION="minio"
-PERSISTENCE_SIZE="1Gi"
+
+SEAWEEDFS_NAMESPACE="seaweedfs"
+SEAWEEDFS_RELEASE="seaweedfs"
+SEAWEEDFS_CHART_VERSION="4.54.0"
+
+S3_ACCESS_KEY="velero"
+S3_SECRET_KEY="${S3_SECRET_KEY:?Ustaw hasło S3}"
+S3_BUCKET="velero"
+S3_REGION="us-east-1"
+
+STORAGE_CLASS="platform-storageclass"
+PERSISTENCE_SIZE="10Gi"
 MEMORY_REQ="512Mi"
 MEMORY_LIMIT="1Gi"
 
-# ==========================================
-# 1️⃣ Instalacja MinIO
-# ==========================================
-echo "==> Tworzenie namespace MinIO"
-kubectl create ns $MINIO_NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+VELERO_NAMESPACE="velero"
+VELERO_VERSION="v1.19.0"
+VELERO_AWS_PLUGIN_VERSION="v1.15.0"
 
-echo "==> Instalacja MinIO przez Helm"
-helm repo add minio https://charts.min.io/
-helm repo update
+S3_URL="http://seaweedfs-all-in-one.${SEAWEEDFS_NAMESPACE}.svc.cluster.local:8333"
 
-helm upgrade --install $MINIO_RELEASE minio/minio \
-  -n $MINIO_NAMESPACE \
-  --set mode=$MINIO_MODE \
-  --set replicas=$MINIO_REPLICAS \
-  --set rootUser=$MINIO_ROOT_USER \
-  --set rootPassword=$MINIO_ROOT_PASSWORD \
-  --set persistence.size=$PERSISTENCE_SIZE \
-  --set persistence.storageClass=$STORAGE_CLASS \
-  --set resources.requests.memory=$MEMORY_REQ \
-  --set resources.limits.memory=$MEMORY_LIMIT \
-  --wait=false
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
+umask 077
+WORK_DIR=$(mktemp -d)
+CREDENTIALS_FILE="$WORK_DIR/credentials"
 
-# Poczekaj aż MinIO pod będzie Running
-echo "==> Czekanie na MinIO pod..."
-kubectl wait --for=condition=ready pod -l app=minio -n $MINIO_NAMESPACE --timeout=300s
+trap 'rm -rf "$WORK_DIR"' EXIT
 
 # ==========================================
-# 2️⃣ Tworzenie bucketu
+# 0. Weryfikacja środowiska
 # ==========================================
-echo "==> Tworzenie bucketu $MINIO_BUCKET w MinIO"
-kubectl -n $MINIO_NAMESPACE exec svc/minio -- mc alias set local http://127.0.0.1:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD
-kubectl -n $MINIO_NAMESPACE exec svc/minio -- mc mb local/$MINIO_BUCKET || echo "Bucket już istnieje"
+
+echo "==> Sprawdzanie środowiska"
+
+command -v kubectl >/dev/null
+command -v helm >/dev/null
+command -v curl >/dev/null
+
+kubectl get storageclass "$STORAGE_CLASS"
+kubectl get csidriver driver.longhorn.io
+
+kubectl get crd \
+  volumesnapshots.snapshot.storage.k8s.io \
+  volumesnapshotclasses.snapshot.storage.k8s.io \
+  volumesnapshotcontents.snapshot.storage.k8s.io
 
 # ==========================================
-# 3️⃣ Tworzenie secretu Velero
+# 1. Instalacja SeaweedFS
 # ==========================================
-echo "==> Tworzenie secretu z poświadczeniami Velero"
-cat <<EOF > velero-credentials.txt
+
+echo "==> Tworzenie namespace SeaweedFS"
+
+kubectl create namespace "$SEAWEEDFS_NAMESPACE" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+echo "==> Instalacja SeaweedFS przez Helm"
+
+helm repo add seaweedfs \
+  https://seaweedfs.github.io/seaweedfs/helm \
+  --force-update
+
+helm repo update seaweedfs
+
+helm upgrade --install "$SEAWEEDFS_RELEASE" \
+  seaweedfs/seaweedfs \
+  --version "$SEAWEEDFS_CHART_VERSION" \
+  --namespace "$SEAWEEDFS_NAMESPACE" \
+  --set allInOne.enabled=true \
+  --set allInOne.replicas=1 \
+  --set master.enabled=false \
+  --set volume.enabled=false \
+  --set filer.enabled=false \
+  --set s3.enabled=false \
+  --set allInOne.data.type=persistentVolumeClaim \
+  --set-string allInOne.data.size="$PERSISTENCE_SIZE" \
+  --set-string allInOne.data.storageClass="$STORAGE_CLASS" \
+  --set allInOne.s3.enabled=true \
+  --set allInOne.s3.enableAuth=true \
+  --set-string s3.credentials.admin.accessKey="$S3_ACCESS_KEY" \
+  --set-string s3.credentials.admin.secretKey="$S3_SECRET_KEY" \
+  --set "allInOne.s3.createBuckets[0].name=$S3_BUCKET" \
+  --set "allInOne.s3.createBuckets[0].anonymousRead=false" \
+  --set allInOne.service.type=ClusterIP \
+  --set allInOne.updateStrategy.type=Recreate \
+  --set allInOne.resources.requests.memory="$MEMORY_REQ" \
+  --set allInOne.resources.limits.memory="$MEMORY_LIMIT" \
+  --wait \
+  --wait-for-jobs \
+  --timeout=10m
+
+echo "==> Weryfikacja SeaweedFS"
+
+kubectl get pods,pvc,svc -n "$SEAWEEDFS_NAMESPACE"
+
+# ==========================================
+# 2. Konfiguracja Longhorn CSI
+# ==========================================
+
+echo "==> Tworzenie VolumeSnapshotClass"
+
+kubectl apply -f "$SCRIPT_DIR/velero-snapshotclass.yaml"
+
+kubectl get volumesnapshotclass longhorn-velero
+
+# ==========================================
+# 3. Poświadczenia Velero
+# ==========================================
+
+echo "==> Przygotowanie poświadczeń Velero"
+
+cat > "$CREDENTIALS_FILE" <<EOF
 [default]
-aws_access_key_id=$MINIO_ROOT_USER
-aws_secret_access_key=$MINIO_ROOT_PASSWORD
+aws_access_key_id=$S3_ACCESS_KEY
+aws_secret_access_key=$S3_SECRET_KEY
 EOF
 
-kubectl create ns $VELERO_NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
-
-kubectl create secret generic cloud-credentials \
-  --namespace $VELERO_NAMESPACE \
-  --from-file=credentials=velero-credentials.txt \
+kubectl create namespace "$VELERO_NAMESPACE" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 # ==========================================
-# 4️⃣ Instalacja Velero
+# 4. Instalacja Velero CLI
 # ==========================================
 
 echo "==> Instalacja Velero CLI"
-if ! command -v velero >/dev/null 2>&1; then
-  echo "==> Instalacja Velero CLI"
-  VELERO_VERSION="v1.17.0"
 
-  curl -L https://github.com/vmware-tanzu/velero/releases/download/${VELERO_VERSION}/velero-${VELERO_VERSION}-linux-amd64.tar.gz \
-    | tar -xz
+case "$(uname -m)" in
+  x86_64) ARCH="amd64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  *)
+    echo "Nieobsługiwana architektura"
+    exit 1
+    ;;
+esac
 
-  sudo mv velero-${VELERO_VERSION}-linux-amd64/velero /usr/local/bin/velero
-  sudo chmod +x /usr/local/bin/velero
-fi
+VELERO_ARCHIVE="velero-${VELERO_VERSION}-linux-${ARCH}"
 
-echo "==> Instalacja Velero z pluginem CSI"
+curl -fsSL \
+  "https://github.com/velero-io/velero/releases/download/${VELERO_VERSION}/${VELERO_ARCHIVE}.tar.gz" \
+  -o "$WORK_DIR/velero.tar.gz"
+
+tar -xzf "$WORK_DIR/velero.tar.gz" -C "$WORK_DIR"
+
+install -m 0755 \
+  "$WORK_DIR/$VELERO_ARCHIVE/velero" \
+  /usr/local/bin/velero
+
+velero version --client-only
+
+
+# ==========================================
+# 5. Instalacja Velero
+# ==========================================
+
+echo "==> Instalacja CRD Velero"
+
 velero install \
+  --crds-only \
+  --dry-run -o yaml | kubectl apply -f -
+
+echo "==> Oczekiwanie na rejestrację CRD Velero"
+
+kubectl wait \
+  --for=condition=Established \
+  crd -l component=velero \
+  --timeout=120s
+
+kubectl wait \
+  --for=condition=Established \
+  crd/backupstoragelocations.velero.io \
+  --timeout=120s
+
+echo "==> Instalacja Velero"
+
+velero install \
+  --namespace "$VELERO_NAMESPACE" \
+  --image "velero/velero:${VELERO_VERSION}" \
   --provider aws \
-  --plugins velero/velero-plugin-for-aws:v1.6.0 \
-  --bucket $VELERO_BUCKET \
-  --secret-file ./velero-credentials.txt \
-  --backup-location-config region=$VELERO_REGION,s3ForcePathStyle=true,s3Url=http://minio.$MINIO_NAMESPACE.svc.cluster.local:9000 \
-  --snapshot-location-config region=$VELERO_REGION \
-  --use-volume-snapshots=true \
-  --namespace $VELERO_NAMESPACE \
-  --pod-annotations "backup.velero.io/credentials=true"
+  --plugins "velero/velero-plugin-for-aws:${VELERO_AWS_PLUGIN_VERSION}" \
+  --bucket "$S3_BUCKET" \
+  --secret-file "$CREDENTIALS_FILE" \
+  --backup-location-config "region=$S3_REGION,s3ForcePathStyle=true,s3Url=$S3_URL,checksumAlgorithm=" \
+  --features=EnableCSI \
+  --use-node-agent \
+  --node-agent-disable-host-path \
+  --use-volume-snapshots=false \
+  --dry-run -o yaml | kubectl apply -f -
 
-echo "==> Checking if cloud-credentials volume already exists..."
-
-# Check if the volume already exists
-if kubectl get deployment velero -n $VELERO_NAMESPACE -o yaml | grep -q "cloud-credentials"; then
-  echo "==> Cloud-credentials volume already exists, skipping patch"
-else
-  echo "==> Patching deployment Velero to add credentials volume"
-
-  kubectl patch deployment velero -n $VELERO_NAMESPACE --type='json' -p='[
-    {
-      "op": "add",
-      "path": "/spec/template/spec/volumes/-",
-      "value": {
-        "name": "cloud-credentials",
-        "secret": {
-          "secretName": "cloud-credentials"
-        }
-      }
-    },
-    {
-      "op": "add",
-      "path": "/spec/template/spec/containers/0/volumeMounts/-",
-      "value": {
-        "mountPath": "/credentials",
-        "name": "cloud-credentials",
-        "readOnly": true
-      }
-    },
-    {
-      "op": "add",
-      "path": "/spec/template/spec/containers/0/env/-",
-      "value": {
-        "name": "AWS_SHARED_CREDENTIALS_FILE",
-        "value": "/credentials/credentials"
-      }
-    }
-  ]'
-fi
 
 # ==========================================
-# 5️⃣ Check instalacji
+# 6. Weryfikacja instalacji
 # ==========================================
-echo "==> Sprawdzanie stanu instalacji..."
 
-# MinIO pod
-kubectl get pods -n $MINIO_NAMESPACE -l app=minio
+echo "==> Sprawdzanie Velero"
 
-# Sprawdzenie bucketu w MinIO
-kubectl -n $MINIO_NAMESPACE exec svc/minio -- mc ls local/$MINIO_BUCKET || echo "UWAGA: Bucket nie istnieje"
+kubectl rollout status deployment/velero \
+  -n "$VELERO_NAMESPACE" \
+  --timeout=300s
 
-# Velero pod
-kubectl get pods -n $VELERO_NAMESPACE -l component=velero
+echo "==> Sprawdzanie Node Agent"
 
-# Secret Velero
-kubectl get secret cloud-credentials -n $VELERO_NAMESPACE
+kubectl rollout status daemonset/node-agent \
+  -n "$VELERO_NAMESPACE" \
+  --timeout=300s
 
 echo "==> Sprawdzanie BackupStorageLocation"
+
+kubectl wait \
+  --for=jsonpath='{.status.phase}'=Available \
+  backupstoragelocation/default \
+  -n "$VELERO_NAMESPACE" \
+  --timeout=300s
+
+echo "==> Status SeaweedFS"
+
+kubectl get pods,pvc,svc -n "$SEAWEEDFS_NAMESPACE"
+
+echo "==> Status Velero"
+
+kubectl get pods -n "$VELERO_NAMESPACE"
+
+echo "==> Status VolumeSnapshotClass"
+
+kubectl get volumesnapshotclass
+
+echo "==> Status BackupStorageLocation"
+
 velero backup-location get
 
+echo "==> Status harmonogramów"
 
-echo "==> Instalacja zakończona!"
+velero schedule get
+
+echo "==> Instalacja zakończona pomyślnie!"
